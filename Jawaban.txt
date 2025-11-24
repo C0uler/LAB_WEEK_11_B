@@ -1,0 +1,42 @@
+1.      
+
+// Open the camera to capture an image
+    private fun openImageCapture() {
+        photoInfo =
+            providerFileManager.generatePhotoUri(System.currentTimeMillis())
+        
+        // This line passes the URI to the camera app, telling it where to store the result
+        photoInfo?.uri?.let { uri ->
+            takePictureLauncher.launch(uri)
+        }
+    }
+
+Kode yang berfungsi untuk menyimpan foto ke URI yang telah tertera
+
+
+
+
+2.
+
+A. URI merujuk pada content uri yang dibuat oleh FilePorvider, ini berfungsi untuk membuat path URI yang aman memungkinkan external Camera untuk menulis pada folder private
+
+B. relative Path merujuk pada folder path yang akan diguunkan untuk mengordinasi Gambar kedalam forlder public hal ini agar Media Store bisa mengakses file tersebut
+
+
+3. 
+[Bonus] Urutan Kronologis (Pengambilan Gambar ke MediaStore)
+
+Persiapan File (File Preparation): Pengguna mengklik tombol. ProviderFileManager.generatePhotoUri membuat file kosong sementara di penyimpanan pribadi aplikasi (app's private storage, sebagaimana didefinisikan dalam file_provider_paths.xml) dan menghasilkan Content URI untuk file tersebut.
+
+Peluncuran Kamera (Camera Launch): MainActivity memanggil takePictureLauncher.launch(uri). Aplikasi menyerahkan kendali ke Aplikasi Kamera eksternal.
+
+Pengambilan & Penulisan (Capture & Write): Pengguna mengambil foto. Aplikasi Kamera menulis data gambar secara langsung ke dalam URI yang disediakan pada Langkah 1.
+
+Kembali ke Aplikasi (Return to App): Aplikasi Kamera tertutup. MainActivity menerima panggilan balik (callback) di dalam blok registerForActivityResult.
+
+Pemicu Penyisipan (Trigger Insertion): Callback tersebut memanggil providerFileManager.insertImageToStore(photoInfo).
+
+Pembuatan MediaStore (MediaStore Creation): MediaContentHelper menghasilkan ContentValues (nama, tipe MIME, jalur relatif/relative path) dan mendapatkan URI MediaStore publik.
+
+Penyalinan Latar Belakang (Copying - Background): ProviderFileManager menjalankan thread latar belakang (executor.execute). Ia menggunakan ContentResolver untuk memasukkan entri baru ke dalam MediaStore publik dan menyalin aliran data (data streams) dari file sementara pribadi (dari Langkah 1) ke entri MediaStore yang baru tersebut.
+
